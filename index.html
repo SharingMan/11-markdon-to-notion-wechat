@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公众号 Markdown 编辑器</title>
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    
+    <!-- Highlight.js for code highlighting -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/styles/github.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/lib/highlight.min.js"></script>
+    
+    <!-- Vue 3 -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Markdown-it -->
+    <script src="https://cdn.jsdelivr.net/npm/markdown-it@14.0.0/dist/markdown-it.min.js"></script>
+    
+    <!-- Turndown for HTML to Markdown -->
+    <script src="https://cdn.jsdelivr.net/npm/turndown@7.1.3/dist/turndown.js"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .header {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+        
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .toolbar button, .toolbar select {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .toolbar button:hover {
+            background: #f0f0f0;
+        }
+        
+        .toolbar button.primary {
+            background: #07c160;
+            color: white;
+            border-color: #07c160;
+        }
+        
+        .toolbar button.primary:hover {
+            background: #06ad56;
+        }
+        
+        .toolbar select {
+            min-width: 150px;
+        }
+        
+        .editor-wrapper {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 200px);
+        }
+        
+        @media (max-width: 768px) {
+            .editor-wrapper {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+        }
+        
+        .editor-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .panel-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #666;
+        }
+        
+        .editor-textarea {
+            flex: 1;
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 15px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: none;
+            outline: none;
+        }
+        
+        .editor-textarea:focus {
+            border-color: #07c160;
+        }
+        
+        .preview-panel {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow-y: auto;
+        }
+        
+        .hidden-file-input {
+            display: none;
+        }
+        
+        .status-message {
+            margin-top: 10px;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            display: block;
+        }
+        
+        .status-message.error {
+            background: #ffebee;
+            color: #c62828;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="container">
+            <div class="header">
+                <h1>📝 公众号 Markdown 编辑器</h1>
+                <div class="toolbar">
+                    <select v-model="currentStyle" @change="updatePreview">
+                        <option v-for="(style, key) in styles" :key="key" :value="key">
+                            {{ style.name }}
+                        </option>
+                    </select>
+                    <input type="file" ref="fileInput" accept=".md,.markdown" class="hidden-file-input" @change="handleFileUpload">
+                    <button @click="$refs.fileInput.click()">📁 上传 .md 文件</button>
+                    <button @click="copyToWeChat" class="primary">📋 复制到公众号</button>
+                    <button @click="clearEditor">🗑️ 清空</button>
+                </div>
+                <div :class="['status-message', statusType]" v-if="statusMessage">
+                    {{ statusMessage }}
+                </div>
+            </div>
+            
+            <div class="editor-wrapper">
+                <div class="editor-panel">
+                    <div class="panel-title">📝 编辑区</div>
+                    <textarea 
+                        class="editor-textarea" 
+                        v-model="markdownContent" 
+                        @input="updatePreview"
+                        placeholder="在这里输入 Markdown 内容，或从其他地方粘贴内容..."
+                    ></textarea>
+                </div>
+                
+                <div class="preview-panel">
+                    <div class="panel-title">👀 预览区</div>
+                    <div v-html="renderedHTML" :id="'preview-' + currentStyle"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="styles.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
