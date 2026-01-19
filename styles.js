@@ -87,7 +87,7 @@ window.styles = {
             }
         }
     },
-    
+
     'tech': {
         name: '技术',
         styles: {
@@ -135,7 +135,7 @@ window.styles = {
             }
         }
     },
-    
+
     'elegant': {
         name: '优雅',
         styles: {
@@ -170,7 +170,7 @@ window.styles = {
             }
         }
     },
-    
+
     'magazine': {
         name: '杂志风格',
         styles: {
@@ -212,7 +212,7 @@ window.styles = {
             }
         }
     },
-    
+
     'nytimes': {
         name: '纽约时报',
         styles: {
@@ -239,7 +239,7 @@ window.styles = {
             }
         }
     },
-    
+
     'ft': {
         name: '金融时报',
         styles: {
@@ -263,7 +263,7 @@ window.styles = {
             }
         }
     },
-    
+
     'jony-ive': {
         name: 'Jony Ive',
         styles: {
@@ -288,7 +288,7 @@ window.styles = {
             }
         }
     },
-    
+
     'wired': {
         name: 'Wired 连线',
         styles: {
@@ -312,7 +312,7 @@ window.styles = {
             }
         }
     },
-    
+
     'medium': {
         name: 'Medium 长文',
         styles: {
@@ -339,7 +339,7 @@ window.styles = {
             }
         }
     },
-    
+
     'apple': {
         name: 'Apple 极简',
         styles: {
@@ -354,19 +354,191 @@ window.styles = {
                 'margin': '0 auto'
             },
             'h1': {
-                'font-size': '72px',
+                'font-size': '48px',
                 'font-weight': '600',
-                'margin': '60px 0 40px',
+                'margin': '60px 0 30px',
                 'color': '#1d1d1f',
-                'letter-spacing': '-0.022em',
-                'line-height': '1.05'
+                'letter-spacing': '-0.003em',
+                'line-height': '1.08349'
+            },
+            'h2': {
+                'font-size': '32px',
+                'font-weight': '600',
+                'margin': '40px 0 20px',
+                'color': '#1d1d1f',
+                'letter-spacing': '0.004em'
             },
             'p': {
                 'margin': '20px 0'
+            },
+            'a': {
+                'color': '#0066cc',
+                'text-decoration': 'none'
+            },
+            'a:hover': {
+                'text-decoration': 'underline'
+            },
+            'blockquote': {
+                'border-left': '4px solid #d2d2d7',
+                'padding-left': '20px',
+                'margin': '20px 0',
+                'color': '#86868b'
             }
         }
     },
-    
+
+    'microsoft': {
+        name: 'Microsoft 风格',
+        styles: {
+            'body': {
+                'font-family': '"Segoe UI", "Segoe UI Web (West European)", "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif',
+                'font-size': '15px',
+                'line-height': '1.6',
+                'color': '#333',
+                'background': '#fff',
+                'padding': '40px',
+                'max-width': '800px',
+                'margin': '0 auto'
+            },
+            'h1': {
+                'font-size': '32px',
+                'font-weight': '600',
+                'margin': '36px 0 12px',
+                'color': '#243a5e',
+                'padding-bottom': '12px'
+            },
+            'h2': {
+                'font-size': '24px',
+                'font-weight': '600',
+                'margin': '30px 0 10px',
+                'color': '#0078d4'
+            },
+            'h3': {
+                'font-size': '20px',
+                'font-weight': '600',
+                'margin': '24px 0 8px',
+                'color': '#333'
+            },
+            'p': {
+                'margin': '12px 0 16px',
+                'text-align': 'justify'
+            },
+            'a': {
+                'color': '#0078d4',
+                'text-decoration': 'none'
+            },
+            'a:hover': {
+                'text-decoration': 'underline'
+            },
+            'blockquote': {
+                'border-left': '4px solid #0078d4',
+                'background': '#f3f2f1',
+                'padding': '16px 20px',
+                'margin': '20px 0',
+                'color': '#333'
+            },
+            'code': {
+                'font-family': 'Consolas, "Courier New", monospace',
+                'background': '#f3f2f1',
+                'padding': '2px 6px',
+                'border-radius': '3px',
+                'color': '#a80000'
+            },
+            'pre': {
+                'background': '#f3f2f1',
+                'padding': '16px',
+                'border-radius': '4px',
+                'border': '1px solid #e1dfdd'
+            }
+        }
+    },
+
+    'google': {
+        name: 'Google 风格',
+        styles: {
+            'body': {
+                'font-family': '"Google Sans", Roboto, Arial, sans-serif',
+                'font-size': '16px',
+                'line-height': '1.625',
+                'color': '#202124',
+                'background': '#fff',
+                'padding': '48px',
+                'max-width': '720px',
+                'margin': '0 auto'
+            },
+            'h1': {
+                'font-family': '"Google Sans Display", "Google Sans", Roboto, Arial, sans-serif',
+                'font-size': '32px',
+                'font-weight': '400',
+                'margin': '32px 0 16px',
+                'color': '#202124',
+                'line-height': '1.25'
+            },
+            'h2': {
+                'font-family': '"Google Sans", Roboto, Arial, sans-serif',
+                'font-size': '24px',
+                'font-weight': '400',
+                'margin': '28px 0 12px',
+                'color': '#202124',
+                'line-height': '1.33'
+            },
+            'h3': {
+                'font-size': '18px',
+                'font-weight': '500',
+                'margin': '24px 0 10px',
+                'color': '#202124'
+            },
+            'p': {
+                'margin': '0 0 16px',
+                'color': '#3c4043'
+            },
+            'a': {
+                'color': '#1a73e8',
+                'text-decoration': 'none',
+                'font-weight': '500'
+            },
+            'a:hover': {
+                'text-decoration': 'underline'
+            },
+            'blockquote': {
+                'border-left': 'none',
+                'position': 'relative',
+                'padding': '0 0 0 20px',
+                'margin': '24px 0',
+                'color': '#5f6368',
+                'font-style': 'italic'
+            },
+            // Google blockquote often has a large quote mark, but for simple CSS we can stick to a border or just color.
+            // Let's add a colored bar on the left for better visibility.
+            'blockquote::before': {
+                'content': '""',
+                'display': 'block',
+                'position': 'absolute',
+                'left': '0',
+                'top': '0',
+                'bottom': '0',
+                'width': '3px',
+                'background': '#4285f4',
+                'border-radius': '2px'
+            },
+            'code': {
+                'font-family': '"Roboto Mono", monospace',
+                'background': '#f1f3f4',
+                'color': '#c5221f',
+                'padding': '2px 4px',
+                'border-radius': '2px',
+                'font-size': '14px'
+            },
+            'pre': {
+                'background': '#f1f3f4',
+                'padding': '16px',
+                'border-radius': '8px',
+                'overflow-x': 'auto',
+                'color': '#202124'
+            }
+        }
+    },
+
     'claude': {
         name: 'Anthropic Claude',
         styles: {
@@ -416,7 +588,7 @@ window.styles = {
             }
         }
     },
-    
+
     'ai-coder': {
         name: 'AI Coder 特调',
         styles: {
@@ -471,7 +643,7 @@ window.styles = {
             }
         }
     },
-    
+
     'deep-reading': {
         name: '深度阅读',
         styles: {
