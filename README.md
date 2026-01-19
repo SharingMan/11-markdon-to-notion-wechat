@@ -147,4 +147,22 @@ IndexedDB 持久化存储
 
 Made with ❤️ 
 
-如果觉得有用，请给个 ⭐️ Star 支持一下！
+If you find this project useful, please give it a ⭐️ Star!
+
+## ❓ 常见问题 (FAQ)
+
+### 1. 为什么页面显示全是代码，没有渲染？
+可能是因为国内网络无法访问默认的 CDN（jsdelivr）。
+解决方法：我们在 `index.html` 中已经将 CDN 替换为国内稳定的 `staticfile.org`。如果你自己修改了代码，请确保使用国内可访问的 CDN 服务。
+
+### 2. 如何将代码推送到 GitHub？
+如果在推送时遇到 `Connection refused` (port 22) 错误，通常是因为网络/防火墙拦截了 SSH 端口。
+**解决方法**：切换到 HTTPS 协议。
+
+```bash
+# 1. 切换远程仓库地址为 HTTPS
+git remote set-url origin https://github.com/SharingMan/11-markdon-to-notion-wechat.git
+
+# 2. 推送代码（可能需要输入 GitHub 用户名和密码/Token）
+git push origin main
+```
