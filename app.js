@@ -433,6 +433,162 @@ createApp({
             return html;
         }
 
+        // 生成长图
+        const generateImage = async () => {
+            try {
+                if (!markdownContent.value) {
+                    showStatus('请先输入内容', 'error');
+                    return;
+                }
+
+                // 检查 html2canvas 是否加载
+                if (typeof html2canvas === 'undefined') {
+                    showStatus('图片生成功能加载中，请稍候...', 'error');
+                    // 尝试重新加载
+                    const script = document.createElement('script');
+                    script.src = 'https://cdn.staticfile.org/html2canvas/1.4.1/html2canvas.min.js';
+                    script.onload = () => generateImage();
+                    script.onerror = () => showStatus('无法加载图片生成库，请检查网络', 'error');
+                    document.head.appendChild(script);
+                    return;
+                }
+
+                showStatus('正在生成图片，请稍候...', 'success');
+
+                await nextTick();
+
+                // 获取当前样式配置
+                const style = styles.value[currentStyle.value];
+                const previewElement = document.querySelector(`#preview-${currentStyle.value}`);
+
+                if (!previewElement) {
+                    showStatus('预览内容为空', 'error');
+                    return;
+                }
+
+                // 创建一个克隆节点
+                const clone = previewElement.cloneNode(true);
+
+                // 移除 ID 以避免与原有 CSS 冲突
+                clone.removeAttribute('id');
+
+                // 设置容器基础样式
+                clone.style.width = '800px';
+                clone.style.maxWidth = '800px';
+                clone.style.position = 'fixed';
+                clone.style.top = '0';
+                clone.style.left = '-9999px';
+                clone.style.zIndex = '-1';
+                clone.style.boxSizing = 'border-box';
+                clone.style.padding = '40px';
+                clone.style.margin = '0';
+
+                // 1. 应用 Body 样式到容器
+                if (style && style.styles && style.styles.body) {
+                    Object.entries(style.styles.body).forEach(([prop, value]) => {
+                        // 转换 CSS 属性名（如 padding-left -> paddingLeft）
+                        const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                        clone.style[camelProp] = value;
+                    });
+                }
+                // 强制背景色，避免透明
+                if (!clone.style.background && !clone.style.backgroundColor) {
+                    clone.style.backgroundColor = '#fff';
+                }
+
+                // 2. 应用子元素样式
+                if (style && style.styles) {
+                    Object.entries(style.styles).forEach(([selector, props]) => {
+                        if (selector === 'body') return;
+
+                        const elements = clone.querySelectorAll(selector);
+                        elements.forEach(el => {
+                            Object.entries(props).forEach(([prop, value]) => {
+                                const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                                el.style[camelProp] = value;
+                            });
+                        });
+                    });
+                }
+
+                document.body.appendChild(clone);
+
+                // 等待图片加载
+                const images = clone.querySelectorAll('img');
+                await Promise.all(Array.from(images).map(img => {
+                    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+                    return new Promise(resolve => {
+                        const timeout = setTimeout(resolve, 5000); // 5秒超时
+                        img.onload = () => {
+                            clearTimeout(timeout);
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            clearTimeout(timeout);
+                            resolve(); // 即使失败也继续
+                        };
+                    });
+                }));
+
+                // 修复代码块样式（如果有）
+                const preBlocks = clone.querySelectorAll('pre');
+                preBlocks.forEach(pre => {
+                    const computed = window.getComputedStyle(pre);
+                    if (!pre.style.backgroundColor) pre.style.backgroundColor = computed.backgroundColor || '#f8f8f8';
+                    if (!pre.style.padding) pre.style.padding = computed.padding || '15px';
+                    if (!pre.style.borderRadius) pre.style.borderRadius = computed.borderRadius || '5px';
+                });
+
+                // 使用 html2canvas 生成图片
+                const canvas = await html2canvas(clone, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: clone.style.backgroundColor || '#fff',
+                    logging: false,
+                    width: 800,
+                    height: clone.scrollHeight,
+                    windowWidth: 800,
+                    windowHeight: clone.scrollHeight
+                });
+
+                document.body.removeChild(clone);
+
+                // 创建下载链接
+                const dataUrl = canvas.toDataURL('image/png', 0.95);
+                const link = document.createElement('a');
+                const timestamp = new Date().getTime();
+                link.download = `文章长图-${timestamp}.png`;
+                link.href = dataUrl;
+                link.click();
+
+                // 保存到剪贴板（如果支持）
+                if (navigator.clipboard && navigator.clipboard.write) {
+                    try {
+                        const blob = await new Promise(resolve => {
+                            canvas.toBlob(resolve, 'image/png', 0.95);
+                        });
+                        if (blob) {
+                            await navigator.clipboard.write([
+                                new ClipboardItem({ 'image/png': blob })
+                            ]);
+                            showStatus('图片已生成并复制到剪贴板！', 'success');
+                        } else {
+                            showStatus('图片生成成功！', 'success');
+                        }
+                    } catch (err) {
+                        // 剪贴板复制失败，但图片已下载
+                        showStatus('图片生成成功！', 'success');
+                    }
+                } else {
+                    showStatus('图片生成成功！', 'success');
+                }
+            } catch (error) {
+                console.error('生成图片失败:', error);
+                showStatus('生成图片失败: ' + error.message, 'error');
+            }
+        };
+
         // 清空编辑器
         const clearEditor = () => {
             if (confirm('确定要清空所有内容吗？')) {
@@ -499,6 +655,7 @@ createApp({
             statusType,
             updatePreview,
             handleFileUpload,
+            generateImage,
             copyToWeChat,
             clearEditor
         };
