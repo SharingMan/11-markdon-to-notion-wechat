@@ -9,20 +9,20 @@
 
     <!-- Highlight.js for code highlighting -->
     <!-- Highlight.js for code highlighting -->
-    <link rel="stylesheet" href="https://cdn.staticfile.org/highlight.js/11.9.0/styles/github.min.css">
-    <script src="https://cdn.staticfile.org/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="vendor/highlightjs-github.min.css">
+    <script src="vendor/highlight.min.js"></script>
 
     <!-- Vue 3 -->
-    <script src="https://cdn.staticfile.org/vue/3.3.4/vue.global.min.js"></script>
+    <script src="vendor/vue.global.prod.min.js"></script>
 
     <!-- Markdown-it -->
-    <script src="https://cdn.staticfile.org/markdown-it/13.0.2/markdown-it.min.js"></script>
+    <script src="vendor/markdown-it.min.js"></script>
 
     <!-- Turndown for HTML to Markdown -->
-    <script src="https://cdn.staticfile.org/turndown/7.1.2/turndown.min.js"></script>
+    <script src="vendor/turndown.min.js"></script>
 
     <!-- html2canvas for image generation -->
-    <script src="https://cdn.staticfile.org/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="vendor/html2canvas.min.js"></script>
 
     <style>
         * {
@@ -282,6 +282,52 @@
             color: #c62828;
             display: block;
         }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            padding: 20px;
+        }
+
+        .modal {
+            width: min(900px, 100%);
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .modal h3 {
+            font-size: 16px;
+            margin: 0;
+            color: #333;
+        }
+
+        .modal textarea {
+            width: 100%;
+            min-height: 260px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 10px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
     </style>
 </head>
 
@@ -311,13 +357,25 @@
             <div class="editor-wrapper">
                 <div class="editor-panel">
                     <div class="panel-title">📝 编辑区</div>
-                    <textarea class="editor-textarea" v-model="markdownContent" @input="updatePreview"
+                    <textarea class="editor-textarea" v-model="markdownContent" @input="scheduleUpdatePreview()"
                         placeholder="在这里输入 Markdown 内容，或从其他地方粘贴内容..."></textarea>
                 </div>
 
                 <div class="preview-panel">
                     <div class="panel-title">👀 预览区</div>
                     <div v-html="renderedHTML" :id="'preview-' + currentStyle"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-backdrop" v-if="isManualCopyOpen">
+            <div class="modal" role="dialog" aria-modal="true">
+                <h3>手动复制 HTML</h3>
+                <div>复制失败时可手动复制以下内容再粘贴到公众号编辑器。</div>
+                <textarea ref="manualCopyTextarea" v-model="manualCopyHtml"></textarea>
+                <div class="modal-actions">
+                    <button @click="copyManualHtml">复制 HTML</button>
+                    <button @click="closeManualCopy">关闭</button>
                 </div>
             </div>
         </div>
