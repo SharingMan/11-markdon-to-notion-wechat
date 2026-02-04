@@ -500,26 +500,13 @@ window.styles = {
             'a:hover': {
                 'text-decoration': 'underline'
             },
+            // Google blockquote with left border for WeChat compatibility
             'blockquote': {
-                'border-left': 'none',
-                'position': 'relative',
-                'padding': '0 0 0 20px',
+                'border-left': '3px solid #4285f4',
+                'padding-left': '20px',
                 'margin': '24px 0',
                 'color': '#5f6368',
                 'font-style': 'italic'
-            },
-            // Google blockquote often has a large quote mark, but for simple CSS we can stick to a border or just color.
-            // Let's add a colored bar on the left for better visibility.
-            'blockquote::before': {
-                'content': '""',
-                'display': 'block',
-                'position': 'absolute',
-                'left': '0',
-                'top': '0',
-                'bottom': '0',
-                'width': '3px',
-                'background': '#4285f4',
-                'border-radius': '2px'
             },
             'code': {
                 'font-family': '"Roboto Mono", monospace',

@@ -1,5 +1,5 @@
 // Vue 3 应用
-const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+const { createApp, ref, computed, onMounted, onUnmounted, watch, nextTick } = Vue;
 
 // Markdown 解析器配置
 const markdownItLib = window.markdownit;
@@ -335,6 +335,14 @@ createApp({
             }, delay);
         };
 
+        // 清理定时器函数
+        const clearUpdateTimer = () => {
+            if (previewUpdateTimer) {
+                clearTimeout(previewUpdateTimer);
+                previewUpdateTimer = null;
+            }
+        };
+
         // 处理文件上传
         const handleFileUpload = (event) => {
             const file = event.target.files[0];
@@ -389,7 +397,7 @@ createApp({
             try {
                 showStatus('正在处理图片...', 'success');
 
-                const imageId = 'img-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+                const imageId = 'img-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-' + performance.now().toString().replace('.', '');
                 const compressedBlob = await compressImage(file);
                 await saveImageToDB(imageId, compressedBlob);
 
@@ -459,10 +467,17 @@ createApp({
                 textContainer.remove();
 
                 if (navigator.clipboard && navigator.clipboard.write) {
-                    const htmlBlob = new Blob([html], { type: 'text/html' });
-                    const textBlob = new Blob([plainText], { type: 'text/plain' });
-                    const item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
-                    await navigator.clipboard.write([item]);
+                    try {
+                        const htmlBlob = new Blob([html], { type: 'text/html' });
+                        const textBlob = new Blob([plainText], { type: 'text/plain' });
+                        const item = new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob });
+                        await navigator.clipboard.write([item]);
+                    } catch (clipError) {
+                        console.warn('Clipboard API failed, falling back to manual copy:', clipError);
+                        openManualCopy(html);
+                        showStatus('剪贴板API失败，已打开手动复制窗口', 'error');
+                        return;
+                    }
                 } else {
                     openManualCopy(html);
                     showStatus('剪贴板不可用，已打开手动复制窗口', 'error');
@@ -585,7 +600,7 @@ createApp({
                 return gap.split(' ')[0] || '';
             };
 
-            const gridElements = container.querySelectorAll('[style*="display: grid"], [style*="display:grid"]');
+            const gridElements = container.querySelectorAll('[style*="display: grid"], [style*="display:grid"], [style*="grid-template"], .grid, [class*="grid"]');
             gridElements.forEach((gridEl) => {
                 const template = gridEl.style.getPropertyValue('grid-template-columns');
                 const columns = getColumnCount(template);
@@ -873,6 +888,17 @@ createApp({
             if (textarea) {
                 textarea.addEventListener('paste', handlePaste);
             }
+        });
+
+        // 添加cleanup函数处理卸载
+        onUnmounted(() => {
+            // 清理事件监听器
+            const textarea = document.querySelector('.editor-textarea');
+            if (textarea) {
+                textarea.removeEventListener('paste', handlePaste);
+            }
+            // 清理定时器
+            clearUpdateTimer();
 
             // 从 localStorage 恢复内容
             const savedContent = localStorage.getItem('huasheng_editor_content');
@@ -916,7 +942,8 @@ createApp({
             manualCopyTextarea,
             openManualCopy,
             closeManualCopy,
-            copyManualHtml
+            copyManualHtml,
+            clearUpdateTimer
         };
     }
 }).mount('#app');

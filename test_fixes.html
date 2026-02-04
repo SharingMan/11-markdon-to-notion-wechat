@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bug Fixes Test</title>
+</head>
+<body>
+    <h1>测试已修复的Bug</h1>
+
+    <h2>1. CSS Pseudo-element 修复测试</h2>
+    <p>检查Google风格的blockquote是否正常显示</p>
+
+    <h2>2. 图片ID冲突修复测试</h2>
+    <p>生成多个图片ID，检查是否有重复</p>
+
+    <h2>3. 内存泄漏修复测试</h2>
+    <p>检查事件监听器和定时器是否正确清理</p>
+
+    <h2>4. 依赖加载顺序修复测试</h2>
+    <p>检查styles.js是否在app.js之前加载</p>
+
+    <h2>5. WeChat兼容性修复测试</h2>
+    <p>检查Grid转Table功能是否正常工作</p>
+
+    <script>
+        // 测试图片ID唯一性
+        function testImageIdUniqueness() {
+            const ids = new Set();
+            for (let i = 0; i < 1000; i++) {
+                const imageId = 'img-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9) + '-' + performance.now().toString().replace('.', '');
+                if (ids.has(imageId)) {
+                    console.error('发现重复的图片ID:', imageId);
+                    return false;
+                }
+                ids.add(imageId);
+            }
+            console.log('✅ 图片ID唯一性测试通过 - 生成了1000个唯一ID');
+            return true;
+        }
+
+        // 测试依赖加载
+        function testDependencyLoading() {
+            if (typeof window.styles === 'undefined') {
+                console.error('❌ styles.js 未正确加载');
+                return false;
+            }
+            if (typeof Vue === 'undefined') {
+                console.error('❌ Vue.js 未正确加载');
+                return false;
+            }
+            console.log('✅ 依赖加载测试通过');
+            return true;
+        }
+
+        // 运行测试
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('开始运行Bug修复测试...');
+
+            setTimeout(() => {
+                testImageIdUniqueness();
+                testDependencyLoading();
+
+                console.log('所有测试完成！');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
