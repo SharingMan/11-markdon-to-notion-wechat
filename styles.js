@@ -666,5 +666,501 @@ window.styles = {
                 'border-radius': '4px'
             }
         }
+    },
+
+    // ===== 新增样式 =====
+
+    'mac-white': {
+        name: 'Mac 白',
+        styles: {
+            'body': {
+                'font-family': '-apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif',
+                'font-size': '17px',
+                'line-height': '1.8',
+                'color': '#1d1d1f',
+                'background': '#ffffff',
+                'padding': '60px 40px',
+                'max-width': '780px',
+                'margin': '0 auto'
+            },
+            'h1': {
+                'font-size': '40px',
+                'font-weight': '700',
+                'margin': '50px 0 30px',
+                'color': '#1d1d1f',
+                'letter-spacing': '-0.015em',
+                'line-height': '1.2'
+            },
+            'h2': {
+                'font-size': '28px',
+                'font-weight': '600',
+                'margin': '35px 0 20px',
+                'color': '#1d1d1f',
+                'letter-spacing': '-0.01em'
+            },
+            'h3': {
+                'font-size': '21px',
+                'font-weight': '600',
+                'margin': '28px 0 15px',
+                'color': '#333'
+            },
+            'p': {
+                'margin': '20px 0',
+                'text-align': 'justify'
+            },
+            'code': {
+                'background': '#f5f5f7',
+                'padding': '3px 8px',
+                'border-radius': '6px',
+                'font-family': '"SF Mono", "Monaco", "Consolas", monospace',
+                'font-size': '14px',
+                'color': '#d12b1f'
+            },
+            'pre': {
+                'background': '#f5f5f7',
+                'padding': '20px',
+                'border-radius': '12px',
+                'overflow-x': 'auto',
+                'border': '1px solid #e8e8ed'
+            },
+            'blockquote': {
+                'border-left': '4px solid #86868b',
+                'padding-left': '24px',
+                'margin': '25px 0',
+                'color': '#86868b',
+                'font-style': 'italic'
+            },
+            'a': {
+                'color': '#0066cc',
+                'text-decoration': 'none'
+            },
+            'img': {
+                'max-width': '100%',
+                'height': 'auto',
+                'display': 'block',
+                'margin': '25px auto',
+                'border-radius': '12px'
+            }
+        }
+    },
+
+    'claude-oat': {
+        name: 'Claude 燕麦色',
+        styles: {
+            'body': {
+                'font-family': '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+                'font-size': '16px',
+                'line-height': '1.8',
+                'color': '#3d3d3d',
+                'background': '#faf9f7',
+                'padding': '50px',
+                'max-width': '780px',
+                'margin': '0 auto',
+                'border-radius': '16px'
+            },
+            'h1': {
+                'font-size': '36px',
+                'font-weight': '600',
+                'margin': '40px 0 25px',
+                'color': '#1a1a1a',
+                'line-height': '1.25'
+            },
+            'h2': {
+                'font-size': '26px',
+                'font-weight': '600',
+                'margin': '30px 0 18px',
+                'color': '#2d2d2d'
+            },
+            'p': {
+                'margin': '18px 0'
+            },
+            'code': {
+                'background': '#f0eeeb',
+                'padding': '3px 6px',
+                'border-radius': '4px',
+                'font-family': '"SF Mono", monospace',
+                'font-size': '14px',
+                'color': '#d73a49'
+            },
+            'pre': {
+                'background': '#f5f4f2',
+                'padding': '20px',
+                'border-radius': '8px',
+                'overflow-x': 'auto',
+                'border': '1px solid #e8e6e3'
+            },
+            'blockquote': {
+                'border-left': '4px solid #c4c1bb',
+                'padding-left': '20px',
+                'margin': '25px 0',
+                'color': '#6b6966',
+                'font-style': 'italic'
+            },
+            'a': {
+                'color': '#b35d44',
+                'text-decoration': 'none'
+            },
+            'img': {
+                'max-width': '100%',
+                'height': 'auto',
+                'display': 'block',
+                'margin': '24px auto',
+                'border-radius': '8px'
+            }
+        }
+    },
+
+    'wechat-native': {
+        name: '微信原生',
+        styles: {
+            'body': {
+                'font-family': '-apple-system-font, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif',
+                'font-size': '17px',
+                'line-height': '1.75',
+                'color': '#333',
+                'background': '#fff',
+                'padding': '20px',
+                'max-width': '740px',
+                'margin': '0 auto'
+            },
+            'h1': {
+                'font-size': '24px',
+                'font-weight': '700',
+                'margin': '30px 0 20px',
+                'color': '#000',
+                'line-height': '1.4'
+            },
+            'h2': {
+                'font-size': '20px',
+                'font-weight': '700',
+                'margin': '24px 0 15px',
+                'color': '#333'
+            },
+            'h3': {
+                'font-size': '18px',
+                'font-weight': '700',
+                'margin': '20px 0 12px',
+                'color': '#444'
+            },
+            'p': {
+                'margin': '16px 0',
+                'text-align': 'justify'
+            },
+            'code': {
+                'background': '#f5f5f5',
+                'padding': '2px 4px',
+                'border-radius': '3px',
+                'font-family': 'monospace',
+                'font-size': '14px',
+                'color': '#e83e8c'
+            },
+            'pre': {
+                'background': '#f8f8f8',
+                'padding': '15px',
+                'border-radius': '4px',
+                'overflow-x': 'auto',
+                'border': '1px solid #e5e5e5'
+            },
+            'blockquote': {
+                'border-left': '4px solid #07c160',
+                'padding-left': '15px',
+                'margin': '20px 0',
+                'color': '#666'
+            },
+            'a': {
+                'color': '#576b95',
+                'text-decoration': 'none'
+            },
+            'img': {
+                'max-width': '100%',
+                'height': 'auto',
+                'display': 'block',
+                'margin': '20px auto'
+            },
+            'strong': {
+                'font-weight': '700'
+            }
+        }
+    },
+
+    'cyberpunk': {
+        name: 'Cyberpunk',
+        styles: {
+            'body': {
+                'font-family': '"JetBrains Mono", "Fira Code", monospace',
+                'font-size': '15px',
+                'line-height': '1.7',
+                'color': '#00ff9f',
+                'background': '#0a0a0f',
+                'padding': '40px',
+                'max-width': '800px',
+                'margin': '0 auto'
+            },
+            'h1': {
+                'font-size': '36px',
+                'font-weight': '700',
+                'margin': '40px 0 25px',
+                'color': '#ff00ff',
+                'text-shadow': '0 0 10px #ff00ff',
+                'border-bottom': '2px solid #ff00ff',
+                'padding-bottom': '15px',
+                'text-transform': 'uppercase'
+            },
+            'h2': {
+                'font-size': '26px',
+                'font-weight': '700',
+                'margin': '30px 0 18px',
+                'color': '#00ffff',
+                'text-shadow': '0 0 8px #00ffff'
+            },
+            'h3': {
+                'font-size': '20px',
+                'font-weight': '700',
+                'margin': '24px 0 12px',
+                'color': '#ff6b35'
+            },
+            'p': {
+                'margin': '18px 0',
+                'color': '#b8c5d6'
+            },
+            'code': {
+                'background': '#1a1a2e',
+                'padding': '3px 6px',
+                'border-radius': '3px',
+                'font-family': '"JetBrains Mono", monospace',
+                'font-size': '14px',
+                'color': '#f7df1e',
+                'border': '1px solid #333'
+            },
+            'pre': {
+                'background': '#1a1a2e',
+                'padding': '20px',
+                'border-radius': '8px',
+                'overflow-x': 'auto',
+                'border': '1px solid #ff00ff',
+                'box-shadow': '0 0 10px rgba(255, 0, 255, 0.2)'
+            },
+            'blockquote': {
+                'border-left': '4px solid #00ffff',
+                'padding-left': '20px',
+                'margin': '20px 0',
+                'color': '#00ff9f',
+                'background': 'rgba(0, 255, 159, 0.05)',
+                'padding': '15px 20px'
+            },
+            'a': {
+                'color': '#ff00ff',
+                'text-decoration': 'none'
+            },
+            'img': {
+                'max-width': '100%',
+                'height': 'auto',
+                'display': 'block',
+                'margin': '20px auto',
+                'border': '2px solid #00ffff',
+                'border-radius': '4px',
+                'box-shadow': '0 0 15px rgba(0, 255, 255, 0.3)'
+            }
+        }
+    },
+
+    'ink-wash': {
+        name: '水墨风',
+        styles: {
+            'body': {
+                'font-family': '"Noto Serif SC", "Source Han Serif SC", "SimSun", serif',
+                'font-size': '18px',
+                'line-height': '2.2',
+                'color': '#2c2c2c',
+                'background': '#fdfcfa',
+                'padding': '50px',
+                'max-width': '720px',
+                'margin': '0 auto'
+            },
+            'h1': {
+                'font-size': '38px',
+                'font-weight': '600',
+                'margin': '40px 0 30px',
+                'color': '#1a1a1a',
+                'text-align': 'center',
+                'border-bottom': '1px solid #d4d4d4',
+                'padding-bottom': '20px',
+                'letter-spacing': '0.1em'
+            },
+            'h2': {
+                'font-size': '26px',
+                'font-weight': '600',
+                'margin': '35px 0 20px',
+                'color': '#333',
+                'border-left': '5px solid #666',
+                'padding-left': '15px'
+            },
+            'p': {
+                'margin': '22px 0',
+                'text-align': 'justify',
+                'text-indent': '2em'
+            },
+            'code': {
+                'background': '#f5f5f0',
+                'padding': '2px 6px',
+                'border-radius': '3px',
+                'font-family': '"Noto Sans SC", monospace',
+                'font-size': '15px',
+                'color': '#5d4e37'
+            },
+            'pre': {
+                'background': '#f8f8f4',
+                'padding': '20px',
+                'border-radius': '6px',
+                'overflow-x': 'auto',
+                'border': '1px solid #e0e0d8'
+            },
+            'blockquote': {
+                'border-left': '3px solid #888',
+                'padding-left': '25px',
+                'margin': '25px 0',
+                'color': '#555',
+                'font-style': 'italic',
+                'background': '#f9f9f6',
+                'padding': '18px 25px'
+            },
+            'a': {
+                'color': '#4a4a4a',
+                'text-decoration': 'underline',
+                'text-decoration-color': '#999'
+            },
+            'img': {
+                'max-width': '100%',
+                'height': 'auto',
+                'display': 'block',
+                'margin': '25px auto',
+                'border-radius': '4px',
+                'border': '1px solid #ddd'
+            }
+        }
+    },
+
+    'midnight': {
+        name: '午夜蓝',
+        styles: {
+            'body': {
+                'font-family': '"Inter", -apple-system, BlinkMacSystemFont, sans-serif',
+                'font-size': '16px',
+                'line-height': '1.8',
+                'color': '#c9d1d9',
+                'background': '#0d1117',
+                'padding': '40px',
+                'max-width': '800px',
+                'margin': '0 auto'
+            },
+            'h1': {
+                'font-size': '32px',
+                'font-weight': '600',
+                'margin': '30px 0 20px',
+                'color': '#f0f6fc',
+                'border-bottom': '1px solid #30363d',
+                'padding-bottom': '12px'
+            },
+            'h2': {
+                'font-size': '24px',
+                'font-weight': '600',
+                'margin': '25px 0 15px',
+                'color': '#58a6ff'
+            },
+            'code': {
+                'background': '#161b22',
+                'padding': '3px 6px',
+                'border-radius': '6px',
+                'font-family': '"SF Mono", monospace',
+                'font-size': '14px',
+                'color': '#ff7b72'
+            },
+            'pre': {
+                'background': '#161b22',
+                'padding': '20px',
+                'border-radius': '8px',
+                'overflow-x': 'auto',
+                'border': '1px solid #30363d'
+            },
+            'blockquote': {
+                'border-left': '4px solid #3fb950',
+                'padding-left': '20px',
+                'margin': '20px 0',
+                'color': '#8b949e'
+            },
+            'a': {
+                'color': '#58a6ff',
+                'text-decoration': 'none'
+            },
+            'img': {
+                'max-width': '100%',
+                'height': 'auto',
+                'display': 'block',
+                'margin': '20px auto',
+                'border-radius': '6px'
+            }
+        }
+    },
+
+    'minimalist': {
+        name: '极简主义',
+        styles: {
+            'body': {
+                'font-family': '"Helvetica Neue", Helvetica, Arial, sans-serif',
+                'font-size': '18px',
+                'line-height': '1.9',
+                'color': '#222',
+                'background': '#fff',
+                'padding': '80px 60px',
+                'max-width': '640px',
+                'margin': '0 auto'
+            },
+            'h1': {
+                'font-size': '42px',
+                'font-weight': '300',
+                'margin': '60px 0 40px',
+                'color': '#000',
+                'letter-spacing': '-0.02em',
+                'line-height': '1.2'
+            },
+            'h2': {
+                'font-size': '24px',
+                'font-weight': '400',
+                'margin': '40px 0 20px',
+                'color': '#333'
+            },
+            'p': {
+                'margin': '24px 0',
+                'color': '#444'
+            },
+            'code': {
+                'background': '#f7f7f7',
+                'padding': '2px 4px',
+                'border-radius': '2px',
+                'font-size': '15px'
+            },
+            'pre': {
+                'background': '#f7f7f7',
+                'padding': '20px',
+                'border-radius': '2px',
+                'overflow-x': 'auto'
+            },
+            'blockquote': {
+                'border-left': '2px solid #ccc',
+                'padding-left': '20px',
+                'margin': '24px 0',
+                'color': '#666'
+            },
+            'a': {
+                'color': '#000',
+                'text-decoration': 'underline'
+            },
+            'img': {
+                'max-width': '100%',
+                'height': 'auto',
+                'display': 'block',
+                'margin': '32px auto'
+            }
+        }
     }
 };

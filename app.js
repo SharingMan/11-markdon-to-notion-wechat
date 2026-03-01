@@ -1,6 +1,48 @@
 // Vue 3 应用
 const { createApp, ref, computed, onMounted, onUnmounted, watch, nextTick } = Vue;
 
+// 多图排版插件 - 处理 :::gallery 语法
+const galleryPlugin = (md) => {
+    const fence = md.renderer.rules.fence;
+    md.renderer.rules.fence = function(tokens, idx, options, env, self) {
+        const token = tokens[idx];
+        const info = token.info.trim();
+
+        // 检查是否是 gallery 语法
+        if (info === 'gallery' || info.startsWith('gallery ')) {
+            const columns = info.includes('cols=') ? parseInt(info.match(/cols=(\d+)/)?.[1] || 2) : 2;
+            const content = token.content.trim();
+
+            // 解析图片链接
+            const images = content.split('\n')
+                .filter(line => line.trim())
+                .map(line => {
+                    // 匹配 ![alt](url) 格式
+                    const match = line.match(/^!\[(.*?)\]\((.+?)\)$/);
+                    if (match) {
+                        return { alt: match[1], src: match[2] };
+                    }
+                    // 匹配纯 URL
+                    return { alt: '', src: line.trim() };
+                });
+
+            if (images.length === 0) return '';
+
+            // 生成 grid 布局
+            const gridStyle = `display: grid; grid-template-columns: repeat(${columns}, 1fr); gap: 12px; margin: 20px 0;`;
+            const imgStyle = 'width: 100%; height: 200px; object-fit: cover; border-radius: 8px;';
+
+            const imagesHtml = images.map(img =>
+                `<img src="${img.src}" alt="${img.alt}" style="${imgStyle}">`
+            ).join('');
+
+            return `<div class="gallery-grid" style="${gridStyle}" data-columns="${columns}">${imagesHtml}</div>`;
+        }
+
+        return fence.call(self, tokens, idx, options, env, self);
+    };
+};
+
 // Markdown 解析器配置
 const markdownItLib = window.markdownit;
 if (!markdownItLib) {
@@ -86,7 +128,7 @@ const md = markdownItLib ? markdownItLib({
     linkify: true,
     typographer: true,
     breaks: true
-}) : {
+}).use(galleryPlugin) : {
     render: (text) => simpleMarkdown(text)
 };
 
@@ -128,7 +170,99 @@ let turndownService = null;
 if (window.TurndownService) {
     turndownService = new window.TurndownService({
         headingStyle: 'atx',
-        codeBlockStyle: 'fenced'
+        codeBlockStyle: 'fenced',
+        bulletListMarker: '-',
+        strongDelimiter: '**',
+        emDelimiter: '*'
+    });
+
+    // 自定义规则 - 处理飞书表格
+    turndownService.addRule('tables', {
+        filter: ['table'],
+        replacement: function(content, node) {
+            const rows = Array.from(node.querySelectorAll('tr'));
+            if (rows.length === 0) return '';
+
+            let markdown = '\n';
+            rows.forEach((row, rowIndex) => {
+                const cells = Array.from(row.querySelectorAll('td, th'));
+                const rowContent = cells.map(cell => cell.textContent.trim()).join(' | ');
+                markdown += '| ' + rowContent + ' |\n';
+
+                // 添加表头分隔符
+                if (rowIndex === 0) {
+                    const separator = cells.map(() => '---').join(' | ');
+                    markdown += '| ' + separator + ' |\n';
+                }
+            });
+            return markdown + '\n';
+        }
+    });
+
+    // 处理代码块
+    turndownService.addRule('codeBlocks', {
+        filter: function(node) {
+            return node.nodeName === 'PRE' && node.querySelector('code');
+        },
+        replacement: function(content, node) {
+            const code = node.querySelector('code');
+            const language = code.className.match(/language-(\w+)/)?.[1] || '';
+            return '\n```' + language + '\n' + code.textContent.trim() + '\n```\n';
+        }
+    });
+
+    // 处理图片
+    turndownService.addRule('images', {
+        filter: 'img',
+        replacement: function(content, node) {
+            const alt = node.alt || '';
+            const src = node.getAttribute('src') || '';
+            return '![' + alt + '](' + src + ')';
+        }
+    });
+
+    // 处理链接
+    turndownService.addRule('links', {
+        filter: function(node) {
+            return node.nodeName === 'A' && node.getAttribute('href');
+        },
+        replacement: function(content, node) {
+            const href = node.getAttribute('href');
+            const title = node.title ? ' "' + node.title + '"' : '';
+            return '[' + content + '](' + href + title + ')';
+        }
+    });
+
+    // 处理加粗
+    turndownService.addRule('strong', {
+        filter: ['strong', 'b'],
+        replacement: function(content) {
+            return '**' + content + '**';
+        }
+    });
+
+    // 处理斜体
+    turndownService.addRule('emphasis', {
+        filter: ['em', 'i'],
+        replacement: function(content) {
+            return '*' + content + '*';
+        }
+    });
+
+    // 处理删除线
+    turndownService.addRule('strikethrough', {
+        filter: 'del',
+        replacement: function(content) {
+            return '~~' + content + '~~';
+        }
+    });
+
+    // 处理水平线
+    turndownService.addRule('horizontalRule', {
+        filter: 'hr',
+        replacement: function() {
+            return '\n---\n';
+        }
     });
 }
 
@@ -235,6 +369,22 @@ createApp({
         const manualCopyHtml = ref('');
         const isManualCopyOpen = ref(false);
         const manualCopyTextarea = ref(null);
+        const viewMode = ref('desktop');
+
+        // 视图模式标签
+        const viewModeLabel = computed(() => {
+            const labels = {
+                'mobile': '手机 (375px)',
+                'tablet': '平板 (768px)',
+                'desktop': '桌面 (100%)'
+            };
+            return labels[viewMode.value] || '桌面';
+        });
+
+        // 设置视图模式
+        const setViewMode = (mode) => {
+            viewMode.value = mode;
+        };
 
         // 渲染 HTML
         const renderedHTML = computed(() => {
@@ -364,32 +514,98 @@ createApp({
             event.target.value = '';
         };
 
-        // 处理粘贴事件（图片）
+        // 智能清理 HTML
+        const cleanHtml = (html) => {
+            // 创建临时 DOM
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+
+            // 移除不需要的元素和属性
+            const removeSelectors = [
+                'script', 'style', 'iframe', 'object', 'embed', 'meta',
+                '[class*="comment"]', '[class*="ad-"]', '[class*="ads-"]'
+            ];
+            removeSelectors.forEach(selector => {
+                tempDiv.querySelectorAll(selector).forEach(el => el.remove());
+            });
+
+            // 移除 style 属性（保留 turndown 处理的）
+            tempDiv.querySelectorAll('[style]').forEach(el => {
+                // 保留图片的尺寸样式
+                if (el.tagName !== 'IMG') {
+                    el.removeAttribute('style');
+                }
+            });
+
+            return tempDiv.innerHTML;
+        };
+
+        // 处理粘贴事件（图片 + 富文本）
         const handlePaste = async (event) => {
             const items = event.clipboardData.items;
+            const types = event.clipboardData.types;
 
+            // 优先检查图片
             for (let item of items) {
                 if (item.type.indexOf('image') !== -1) {
                     event.preventDefault();
                     const file = item.getAsFile();
                     await handleImagePaste(file);
-                    break;
+                    showStatus('图片已粘贴', 'success');
+                    return;
                 }
             }
 
-            // 处理 HTML 粘贴（从富文本编辑器）
+            // 处理富文本 HTML（来自飞书、Notion、Word、网页等）
             const htmlData = event.clipboardData.getData('text/html');
+            const plainText = event.clipboardData.getData('text/plain');
+
             if (htmlData && turndownService) {
                 event.preventDefault();
-                const markdown = turndownService.turndown(htmlData);
-                const textarea = event.target;
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
-                const text = markdownContent.value;
-                markdownContent.value = text.substring(0, start) + markdown + text.substring(end);
-                textarea.setSelectionRange(start + markdown.length, start + markdown.length);
-                scheduleUpdatePreview(0);
+
+                try {
+                    // 清理 HTML
+                    const cleanedHtml = cleanHtml(htmlData);
+
+                    // 转换为 Markdown
+                    let markdown = turndownService.turndown(cleanedHtml);
+
+                    // 后处理 - 清理多余空行
+                    markdown = markdown
+                        .replace(/\n{3,}/g, '\n\n')  // 3+ 空行变成 2 个
+                        .replace(/^\n+/, '')         // 开头空行
+                        .replace(/\n+$/, '');        // 结尾空行
+
+                    // 插入到编辑器
+                    const textarea = event.target;
+                    const start = textarea.selectionStart;
+                    const end = textarea.selectionEnd;
+                    const text = markdownContent.value;
+
+                    markdownContent.value = text.substring(0, start) + markdown + text.substring(end);
+                    textarea.setSelectionRange(start + markdown.length, start + markdown.length);
+                    textarea.focus();
+
+                    scheduleUpdatePreview(0);
+                    showStatus('富文本已转换为 Markdown', 'success');
+                } catch (error) {
+                    console.error('粘贴转换失败:', error);
+                    // 如果转换失败，使用纯文本
+                    if (plainText) {
+                        const textarea = event.target;
+                        const start = textarea.selectionStart;
+                        const end = textarea.selectionEnd;
+                        const text = markdownContent.value;
+                        markdownContent.value = text.substring(0, start) + plainText + text.substring(end);
+                        textarea.setSelectionRange(start + plainText.length, start + plainText.length);
+                        scheduleUpdatePreview(0);
+                        showStatus('已粘贴纯文本', 'success');
+                    }
+                }
+                return;
             }
+
+            // 如果没有 HTML，让浏览器默认处理纯文本
         };
 
         // 处理图片粘贴
@@ -865,6 +1081,208 @@ createApp({
             }
         };
 
+        // 导出 HTML
+        const exportHTML = async () => {
+            if (!markdownContent.value) {
+                showStatus('请先输入内容', 'error');
+                return;
+            }
+
+            try {
+                let html = md.render(markdownContent.value);
+
+                // 应用当前样式
+                const style = styles.value[currentStyle.value];
+                if (style) {
+                    html = applyStyles(html, style);
+                }
+
+                // 处理图片
+                html = await processImagesForWeChat(html);
+
+                // 转换 Grid 为 Table
+                html = convertGridToTable(html);
+
+                // 生成完整 HTML 文档
+                const fullHtml = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公众号文章</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+${html}
+</body>
+</html>`;
+
+                // 下载文件
+                const blob = new Blob([fullHtml], { type: 'text/html;charset=utf-8' });
+                const link = document.createElement('a');
+                const timestamp = new Date().toISOString().slice(0, 10);
+                link.download = `公众号文章-${timestamp}.html`;
+                link.href = URL.createObjectURL(blob);
+                link.click();
+                URL.revokeObjectURL(link.href);
+
+                showStatus('HTML 导出成功！', 'success');
+            } catch (error) {
+                console.error('导出 HTML 失败:', error);
+                showStatus('导出 HTML 失败', 'error');
+            }
+        };
+
+        // 导出 PDF
+        const exportPDF = async () => {
+            if (!markdownContent.value) {
+                showStatus('请先输入内容', 'error');
+                return;
+            }
+
+            // 检查 html2canvas 是否加载
+            if (typeof html2canvas === 'undefined') {
+                showStatus('PDF 功能加载中，请稍候...', 'error');
+                const script = document.createElement('script');
+                script.src = 'https://cdn.staticfile.org/html2canvas/1.4.1/html2canvas.min.js';
+                script.onload = () => exportPDF();
+                script.onerror = () => showStatus('无法加载 PDF 生成库', 'error');
+                document.head.appendChild(script);
+                return;
+            }
+
+            try {
+                showStatus('正在生成 PDF，请稍候...', 'success');
+
+                await nextTick();
+
+                const style = styles.value[currentStyle.value];
+                const previewElement = document.querySelector(`#preview-${currentStyle.value}`);
+
+                if (!previewElement) {
+                    showStatus('预览内容为空', 'error');
+                    return;
+                }
+
+                // 克隆节点
+                const clone = previewElement.cloneNode(true);
+                clone.removeAttribute('id');
+                clone.style.width = '800px';
+                clone.style.maxWidth = '800px';
+                clone.style.position = 'fixed';
+                clone.style.top = '0';
+                clone.style.left = '-9999px';
+                clone.style.zIndex = '-1';
+                clone.style.boxSizing = 'border-box';
+                clone.style.padding = '40px';
+                clone.style.margin = '0';
+
+                // 应用样式
+                if (style && style.styles && style.styles.body) {
+                    Object.entries(style.styles.body).forEach(([prop, value]) => {
+                        const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                        clone.style[camelProp] = value;
+                    });
+                }
+                if (!clone.style.background && !clone.style.backgroundColor) {
+                    clone.style.backgroundColor = '#fff';
+                }
+
+                // 应用子元素样式
+                if (style && style.styles) {
+                    Object.entries(style.styles).forEach(([selector, props]) => {
+                        if (selector === 'body') return;
+                        const elements = clone.querySelectorAll(selector);
+                        elements.forEach(el => {
+                            Object.entries(props).forEach(([prop, value]) => {
+                                const camelProp = prop.replace(/-([a-z])/g, (g) => g[1].toUpperCase());
+                                el.style[camelProp] = value;
+                            });
+                        });
+                    });
+                }
+
+                document.body.appendChild(clone);
+
+                // 等待图片加载
+                const images = clone.querySelectorAll('img');
+                await Promise.all(Array.from(images).map(img => {
+                    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+                    return new Promise(resolve => {
+                        const timeout = setTimeout(resolve, 5000);
+                        img.onload = () => { clearTimeout(timeout); resolve(); };
+                        img.onerror = () => { clearTimeout(timeout); resolve(); };
+                    });
+                }));
+
+                const canvas = await html2canvas(clone, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: clone.style.backgroundColor || '#fff',
+                    logging: false,
+                    width: 800,
+                    height: clone.scrollHeight,
+                    windowWidth: 800,
+                    windowHeight: clone.scrollHeight
+                });
+
+                document.body.removeChild(clone);
+
+                // 转换为 PDF
+                const imgData = canvas.toDataURL('image/png', 1.0);
+
+                // 检查是否加载了 jsPDF
+                if (typeof jspdf === 'undefined' || !window.jspdf) {
+                    // 如果没有 jsPDF，直接下载图片
+                    const link = document.createElement('a');
+                    const timestamp = new Date().toISOString().slice(0, 10);
+                    link.download = `公众号文章-${timestamp}.png`;
+                    link.href = imgData;
+                    link.click();
+                    showStatus('已导出为图片（PDF库加载失败）', 'success');
+                    return;
+                }
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const pdfWidth = pdf.internal.pageSize.getWidth();
+                const pdfHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = canvas.width;
+                const imgHeight = canvas.height;
+                const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+
+                let position = 0;
+                let heightLeft = imgHeight;
+
+                // 分页处理
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight * (pdfWidth / imgWidth));
+                heightLeft -= pdfHeight;
+
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight * (pdfWidth / imgWidth));
+                    heightLeft -= pdfHeight;
+                }
+
+                const timestamp = new Date().toISOString().slice(0, 10);
+                pdf.save(`公众号文章-${timestamp}.pdf`);
+                showStatus('PDF 导出成功！', 'success');
+
+            } catch (error) {
+                console.error('导出 PDF 失败:', error);
+                showStatus('导出 PDF 失败: ' + error.message, 'error');
+            }
+        };
+
         // 显示状态消息
         const showStatus = (message, type = 'success') => {
             statusMessage.value = message;
@@ -883,23 +1301,6 @@ createApp({
         onMounted(async () => {
             await initDB();
 
-            // 监听编辑器粘贴事件
-            const textarea = document.querySelector('.editor-textarea');
-            if (textarea) {
-                textarea.addEventListener('paste', handlePaste);
-            }
-        });
-
-        // 添加cleanup函数处理卸载
-        onUnmounted(() => {
-            // 清理事件监听器
-            const textarea = document.querySelector('.editor-textarea');
-            if (textarea) {
-                textarea.removeEventListener('paste', handlePaste);
-            }
-            // 清理定时器
-            clearUpdateTimer();
-
             // 从 localStorage 恢复内容
             const savedContent = localStorage.getItem('huasheng_editor_content');
             if (savedContent) {
@@ -911,17 +1312,34 @@ createApp({
                 currentStyle.value = savedStyle;
             }
 
-            // 自动保存
-            watch(markdownContent, (newContent) => {
-                localStorage.setItem('huasheng_editor_content', newContent);
-            });
-
-            watch(currentStyle, (newStyle) => {
-                localStorage.setItem('huasheng_editor_style', newStyle);
-            });
+            // 监听编辑器粘贴事件
+            const textarea = document.querySelector('.editor-textarea');
+            if (textarea) {
+                textarea.addEventListener('paste', handlePaste);
+            }
 
             // 初始更新预览
-            updatePreview();
+            scheduleUpdatePreview(100);
+        });
+
+        // 自动保存监听
+        watch(markdownContent, (newContent) => {
+            localStorage.setItem('huasheng_editor_content', newContent);
+        });
+
+        watch(currentStyle, (newStyle) => {
+            localStorage.setItem('huasheng_editor_style', newStyle);
+        });
+
+        // 清理函数处理卸载
+        onUnmounted(() => {
+            // 清理事件监听器
+            const textarea = document.querySelector('.editor-textarea');
+            if (textarea) {
+                textarea.removeEventListener('paste', handlePaste);
+            }
+            // 清理定时器
+            clearUpdateTimer();
         });
 
         return {
@@ -943,7 +1361,12 @@ createApp({
             openManualCopy,
             closeManualCopy,
             copyManualHtml,
-            clearUpdateTimer
+            clearUpdateTimer,
+            viewMode,
+            viewModeLabel,
+            setViewMode,
+            exportHTML,
+            exportPDF
         };
     }
 }).mount('#app');
