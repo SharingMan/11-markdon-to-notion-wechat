@@ -56,10 +56,12 @@ const escapeHtml = (text) => text
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
 
+// 解析简单 Markdown（后备方案）
 const simpleMarkdown = (text) => {
     if (!text) return '';
     let content = escapeHtml(text);
 
+    // 处理代码块
     const codeBlocks = [];
     content = content.replace(/```(\w+)?\n([\s\S]*?)```/g, (_, lang, code) => {
         const safeCode = escapeHtml(code.trim());
@@ -68,14 +70,62 @@ const simpleMarkdown = (text) => {
         return `@@CODEBLOCK_${codeBlocks.length - 1}@@`;
     });
 
+    // 处理表格
+    const tables = [];
+    content = content.replace(/((?:^\|.*\|$\n?)+)/gm, (match) => {
+        const lines = match.trim().split('\n').filter(l => l.trim());
+        if (lines.length < 2) return match;
+
+        // 检查是否是有效的表格（有分隔符行）
+        const separatorLine = lines[1];
+        if (!separatorLine.match(/^\|[\s\-:|]+\|$/)) {
+            return match;
+        }
+
+        // 构建表格 HTML
+        let tableHtml = '<table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;line-height:1.5;border:1px solid #ddd;">';
+
+        // 表头
+        const headerCells = lines[0].split('|').filter(c => c.trim() !== '');
+        tableHtml += '<thead><tr>';
+        headerCells.forEach(cell => {
+            tableHtml += `<th style="border:1px solid #ddd;padding:12px;background:#f8f9fa;font-weight:600;text-align:left;">${cell.trim()}</th>`;
+        });
+        tableHtml += '</tr></thead>';
+
+        // 数据行（从第3行开始，跳过表头和分隔符）
+        if (lines.length > 2) {
+            tableHtml += '<tbody>';
+            for (let i = 2; i < lines.length; i++) {
+                const cells = lines[i].split('|').filter(c => c.trim() !== '');
+                const bgColor = (i - 2) % 2 === 1 ? 'background:#fafafa;' : '';
+                tableHtml += `<tr style="${bgColor}">`;
+                cells.forEach(cell => {
+                    tableHtml += `<td style="border:1px solid #ddd;padding:12px;">${cell.trim()}</td>`;
+                });
+                tableHtml += '</tr>';
+            }
+            tableHtml += '</tbody>';
+        }
+
+        tableHtml += '</table>';
+        tables.push(tableHtml);
+        return `@@TABLE_${tables.length - 1}@@`;
+    });
+
     const lines = content.split('\n');
     const htmlLines = [];
     let inOrderedList = false;
+    let inUnorderedList = false;
 
     const flushList = () => {
         if (inOrderedList) {
             htmlLines.push('</ol>');
             inOrderedList = false;
+        }
+        if (inUnorderedList) {
+            htmlLines.push('</ul>');
+            inUnorderedList = false;
         }
     };
 
@@ -94,6 +144,13 @@ const simpleMarkdown = (text) => {
             continue;
         }
 
+        // 跳过表格占位符
+        if (line.startsWith('@@TABLE_')) {
+            flushList();
+            htmlLines.push(line);
+            continue;
+        }
+
         const headingMatch = line.match(/^(#{1,6})\s+(.+)$/);
         if (headingMatch) {
             flushList();
@@ -104,11 +161,29 @@ const simpleMarkdown = (text) => {
 
         const orderedMatch = line.match(/^(\d+)\.\s+(.+)$/);
         if (orderedMatch) {
+            if (inUnorderedList) {
+                htmlLines.push('</ul>');
+                inUnorderedList = false;
+            }
             if (!inOrderedList) {
                 htmlLines.push('<ol>');
                 inOrderedList = true;
             }
             htmlLines.push(`<li>${applyInline(orderedMatch[2])}</li>`);
+            continue;
+        }
+
+        const unorderedMatch = line.match(/^[-*]\s+(.+)$/);
+        if (unorderedMatch) {
+            if (inOrderedList) {
+                htmlLines.push('</ol>');
+                inOrderedList = false;
+            }
+            if (!inUnorderedList) {
+                htmlLines.push('<ul>');
+                inUnorderedList = true;
+            }
+            htmlLines.push(`<li>${applyInline(unorderedMatch[1])}</li>`);
             continue;
         }
 
@@ -120,15 +195,46 @@ const simpleMarkdown = (text) => {
 
     let html = htmlLines.join('\n');
     html = html.replace(/@@CODEBLOCK_(\d+)@@/g, (_, index) => codeBlocks[parseInt(index, 10)]);
+    html = html.replace(/@@TABLE_(\d+)@@/g, (_, index) => tables[parseInt(index, 10)]);
     return html;
+};
+
+// 表格渲染插件 - 增强表格样式
+const tablePlugin = (md) => {
+    // 保存默认的表格渲染规则
+    const defaultTableRender = md.renderer.rules.table_open || function(tokens, idx, options, env, self) {
+        return self.renderToken(tokens, idx, options);
+    };
+
+    md.renderer.rules.table_open = function(tokens, idx, options, env, self) {
+        return '<table style="width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 14px; line-height: 1.5;">';
+    };
+
+    md.renderer.rules.th_open = function(tokens, idx, options, env, self) {
+        const token = tokens[idx];
+        const style = token.attrGet('style') || '';
+        return `<th style="${style} border: 1px solid #ddd; padding: 12px; background: #f8f9fa; font-weight: 600; text-align: left;">`;
+    };
+
+    md.renderer.rules.td_open = function(tokens, idx, options, env, self) {
+        const token = tokens[idx];
+        const style = token.attrGet('style') || '';
+        return `<td style="${style} border: 1px solid #ddd; padding: 12px;">`;
+    };
+
+    md.renderer.rules.tr_open = function() {
+        return '<tr style="border-bottom: 1px solid #ddd;">';
+    };
 };
 
 const md = markdownItLib ? markdownItLib({
     html: true,
     linkify: true,
     typographer: true,
-    breaks: true
-}).use(galleryPlugin) : {
+    breaks: true,
+    // 启用表格支持
+    table: true
+}).use(galleryPlugin).use(tablePlugin) : {
     render: (text) => simpleMarkdown(text)
 };
 
@@ -176,25 +282,56 @@ if (window.TurndownService) {
         emDelimiter: '*'
     });
 
-    // 自定义规则 - 处理飞书表格
+    // 表格转换规则 - 确保正确转换 HTML 表格为 Markdown
+    turndownService.keep(['table', 'tr', 'td', 'th']);
+
+    // 自定义规则处理表格（Turndown 默认支持，这里增强处理）
     turndownService.addRule('tables', {
-        filter: ['table'],
+        filter: function(node) {
+            return node.nodeName === 'TABLE';
+        },
         replacement: function(content, node) {
+            // 获取所有行
             const rows = Array.from(node.querySelectorAll('tr'));
             if (rows.length === 0) return '';
 
-            let markdown = '\n';
-            rows.forEach((row, rowIndex) => {
+            // 解析每一行
+            const tableData = rows.map(row => {
                 const cells = Array.from(row.querySelectorAll('td, th'));
-                const rowContent = cells.map(cell => cell.textContent.trim()).join(' | ');
-                markdown += '| ' + rowContent + ' |\n';
-
-                // 添加表头分隔符
-                if (rowIndex === 0) {
-                    const separator = cells.map(() => '---').join(' | ');
-                    markdown += '| ' + separator + ' |\n';
-                }
+                return cells.map(cell => {
+                    // 获取单元格内容，保留基本格式
+                    let text = turndownService.turndown(cell.innerHTML);
+                    // 清理换行符
+                    text = text.replace(/\n/g, ' ').trim();
+                    // 转义管道符
+                    text = text.replace(/\|/g, '\\|');
+                    return text || ' ';
+                });
             });
+
+            if (tableData.length === 0 || tableData[0].length === 0) return '';
+
+            // 构建 Markdown 表格
+            let markdown = '\n';
+
+            // 表头行
+            const headerRow = tableData[0];
+            markdown += '| ' + headerRow.join(' | ') + ' |\n';
+
+            // 分隔符
+            const separator = headerRow.map(() => '---').join(' | ');
+            markdown += '| ' + separator + ' |\n';
+
+            // 数据行
+            for (let i = 1; i < tableData.length; i++) {
+                // 补齐单元格数量
+                const row = tableData[i];
+                while (row.length < headerRow.length) {
+                    row.push('');
+                }
+                markdown += '| ' + row.join(' | ') + ' |\n';
+            }
+
             return markdown + '\n';
         }
     });
@@ -673,6 +810,9 @@ createApp({
                 // 转换 Grid 为 Table（公众号兼容）
                 html = convertGridToTable(html);
 
+                // 内联表格样式（确保公众号正确显示）
+                html = inlineTableStyles(html);
+
                 // 内联所有样式
                 html = inlineStyles(html);
 
@@ -858,6 +998,48 @@ createApp({
                 gridEl.style.removeProperty('gap');
                 gridEl.style.removeProperty('grid-gap');
                 gridEl.appendChild(table);
+            });
+
+            return container.innerHTML;
+        }
+
+        // 内联表格样式（公众号兼容）
+        function inlineTableStyles(html) {
+            const container = document.createElement('div');
+            container.innerHTML = html;
+
+            // 为所有表格添加样式
+            container.querySelectorAll('table').forEach((table) => {
+                table.style.width = '100%';
+                table.style.borderCollapse = 'collapse';
+                table.style.margin = '16px 0';
+                table.style.fontSize = '14px';
+                table.style.lineHeight = '1.5';
+                table.style.border = '1px solid #ddd';
+
+                // 处理表头
+                table.querySelectorAll('th').forEach((th) => {
+                    th.style.border = '1px solid #ddd';
+                    th.style.padding = '12px';
+                    th.style.backgroundColor = '#f8f9fa';
+                    th.style.fontWeight = '600';
+                    th.style.textAlign = 'left';
+                });
+
+                // 处理单元格
+                table.querySelectorAll('td').forEach((td) => {
+                    td.style.border = '1px solid #ddd';
+                    td.style.padding = '12px';
+                });
+
+                // 处理行
+                table.querySelectorAll('tr').forEach((tr, index) => {
+                    tr.style.borderBottom = '1px solid #ddd';
+                    // 斑马纹
+                    if (index % 2 === 1) {
+                        tr.style.backgroundColor = '#fafafa';
+                    }
+                });
             });
 
             return container.innerHTML;

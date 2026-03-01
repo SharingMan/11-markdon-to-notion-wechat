@@ -84,6 +84,30 @@ window.styles = {
             'em': {
                 'color': '#666',
                 'font-style': 'italic'
+            },
+            'table': {
+                'width': '100%',
+                'border-collapse': 'collapse',
+                'margin': '16px 0',
+                'font-size': '14px',
+                'line-height': '1.5'
+            },
+            'th': {
+                'border': '1px solid #ddd',
+                'padding': '12px',
+                'background': '#f8f9fa',
+                'font-weight': '600',
+                'text-align': 'left'
+            },
+            'td': {
+                'border': '1px solid #ddd',
+                'padding': '12px'
+            },
+            'tr': {
+                'border-bottom': '1px solid #ddd'
+            },
+            'tr:nth-child(even)': {
+                'background': '#fafafa'
             }
         }
     },
